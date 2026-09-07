@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Foundation\Events\DiagnosingHealth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +22,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Event::listen(DiagnosingHealth::class, function (): void {
+            if (config('starter.fail_health')) {
+                throw new \RuntimeException('Requested health failure');
+            }
+            DB::select('SELECT 1');
+            if (! is_writable(storage_path('app'))) {
+                throw new \RuntimeException('Application storage unavailable');
+            }
+        });
     }
 }
